@@ -21,8 +21,6 @@ services:
     image: nginx:alpine
     container_name: nginx_server
     restart: unless-stopped
-    ports:
-      - "80:80"
     volumes:
       - .:/var/www
       - ./nginx:/etc/nginx/conf.d
