@@ -1,0 +1,36 @@
+# Node.js
+node_modules
+npm-debug.log
+
+# PHP / Laravel
+vendor
+.env
+.env.testing
+composer.phar
+composer.lock
+.phpunit.result.cache
+
+# Docker
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# Git
+.git
+.gitignore
+
+# IDEs
+.idea
+.vscode
+
+# Storage
+storage/*.key
+storage/framework/cache/data/*
+storage/framework/sessions/*
+storage/framework/testing/*
+storage/framework/views/*
+storage/logs/*
+
+# OS Files
+.DS_Store
+Thumbs.db
