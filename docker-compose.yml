@@ -1,7 +1,6 @@
 version: '3.8'
 
 services:
-  # The Laravel application (PHP-FPM)
   app:
     build:
       context: .
@@ -13,10 +12,7 @@ services:
       - .:/var/www
     networks:
       - laravel
-    depends_on:
-      - db
 
-  # The Nginx Web Server
   nginx:
     image: nginx:alpine
     container_name: nginx_server
@@ -29,26 +25,6 @@ services:
     depends_on:
       - app
 
-  # The Database (MySQL)
-  db:
-    image: mysql:8.0
-    container_name: mysql_db
-    restart: unless-stopped
-    environment:
-      MYSQL_DATABASE: ${DB_DATABASE:-laravel}
-      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-root}
-      MYSQL_PASSWORD: ${DB_PASSWORD:-root}
-      MYSQL_USER: ${DB_USERNAME:-root}
-    volumes:
-      - db_data:/var/lib/mysql
-    networks:
-      - laravel
-
-# Define the network to link our services
 networks:
   laravel:
     driver: bridge
-
-# Persistent volumes for data
-volumes:
-  db_data:
