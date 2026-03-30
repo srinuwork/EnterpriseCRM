@@ -1,61 +1,35 @@
-# Stage 1: Build Assets
-FROM node:20-alpine AS node-builder
-WORKDIR /app
-COPY package*.json ./
-RUN npm install
-COPY . .
-RUN npm run build
+FROM php:8.4-cli
 
-# Stage 2: PHP Application
-FROM php:8.3-fpm
-
-# Arguments for permission handling
-ARG user=www-data
-ARG uid=1000
-
-# Install system dependencies
+# 1. Install system dependencies + Node.js & npm (Required for Vite)
 RUN apt-get update && apt-get install -y \
     git \
-    curl \
-    libpng-dev \
-    libonig-dev \
-    libxml2-dev \
-    zip \
     unzip \
+    zip \
     libzip-dev \
-    libfreetype6-dev \
-    libjpeg62-turbo-dev \
-    libwebp-dev \
-    libicu-dev \
-    libpq-dev
+    libpq-dev \
+    nodejs \
+    npm \
+    && docker-php-ext-install pdo pdo_pgsql zip
 
-# Clear cache
-RUN apt-get clean && rm -rf /var/lib/apt/lists/*
+# 2. Install Composer
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
-# Install PHP extensions
-RUN docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp \
-    && docker-php-ext-install pdo pdo_mysql pdo_pgsql mbstring exif pcntl bcmath gd intl zip opcache
-
-# Get latest Composer
-COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
-
-# Set working directory
 WORKDIR /var/www
 
-# Copy application files
+# 3. Copy your code
 COPY . .
 
-# Copy built assets from node-builder stage
-COPY --from=node-builder /app/public/build ./public/build
+# 4. Install PHP Dependencies (Ignore version checks)
+RUN composer install --no-interaction --optimize-autoloader --no-scripts --ignore-platform-reqs
 
-# Install PHP dependencies
-RUN composer install --no-dev --optimize-autoloader --no-scripts
+# 5. Install Node Dependencies & Build your Vite assets
+RUN npm install && npm run build
 
-# Set permissions
-RUN chown -R www-data:www-data /var/www \
-    && chmod -R 775 storage bootstrap/cache
+# 6. Set correct permissions for storage and cache
+RUN chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache \
+    && chmod -R 775 /var/www/storage /var/www/bootstrap/cache
 
-USER $user
+EXPOSE 8000
 
-EXPOSE 9000
-CMD ["php-fpm"]
+# 7. Run dev server
+CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8000"]
